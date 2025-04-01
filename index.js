@@ -6,7 +6,6 @@ const url = require("url");
 const app = express();
 app.use(cors()); // Allows all origins
 
-// Proxy requests
 app.get("/proxy", (req, res) => {
     let targetUrl = req.query.url;
 
@@ -35,10 +34,16 @@ app.get("/proxy", (req, res) => {
         // Forward headers
         res.set(response.headers);
 
-        // Check if it's an HTML page (e.g., main page that links to assets like CSS/JS)
+        // Check if it's an HTML page
         if (response.headers["content-type"].includes("html")) {
+            body = body.toString();
+
+            // Remove or modify the DevTools detection logic in the page's JS
+            // For example, removing specific DevTools detection code (you can adjust based on what the page uses)
+            body = body.replace(/window\.devtools.*?=\s*true;/g, "");
+
             // Modify HTML to fix relative URLs for assets like CSS, JS, and images
-            body = body.toString().replace(/(href="\/assets|src="\/assets)/g, (match) => {
+            body = body.replace(/(href="\/assets|src="\/assets)/g, (match) => {
                 return match.replace('/assets', 'https://player.romantica.top/assets');
             });
         }
