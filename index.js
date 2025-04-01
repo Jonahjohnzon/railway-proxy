@@ -12,6 +12,9 @@ app.get("/proxy", (req, res) => {
         return res.status(400).send("Missing URL parameter");
     }
 
+    // Fix double slashes in the URL
+    targetUrl = targetUrl.replace(/\/\//g, '/');
+
     // Ensure the URL starts with "https://"
     if (!targetUrl.startsWith("http")) {
         targetUrl = "https://player.romantica.top" + targetUrl;
@@ -33,7 +36,7 @@ app.get("/proxy", (req, res) => {
         // Forward headers
         res.set(response.headers);
 
-        // If it's HTML content, modify body and headers
+        // Check if it's HTML content
         if (response.headers["content-type"].includes("html")) {
             body = body.toString();
 
@@ -53,6 +56,14 @@ app.get("/proxy", (req, res) => {
             body = body.replace(/(src="\/)/g, (match) => {
                 return match.replace('/', 'https://player.romantica.top/');
             });
+
+            res.setHeader("Content-Type", "text/html; charset=utf-8");
+        } else if (response.headers["content-type"].includes("javascript")) {
+            // Forward JavaScript content correctly
+            res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+        } else if (response.headers["content-type"].includes("css")) {
+            // Forward CSS content correctly
+            res.setHeader("Content-Type", "text/css; charset=utf-8");
         }
 
         // Send the body of the request (video, CSS, JS, etc.)
