@@ -13,7 +13,7 @@ app.get("/proxy", (req, res) => {
     }
 
     // Fix double slashes in the URL
-    targetUrl = targetUrl.replace(/\/\//g, '/');
+    // targetUrl = targetUrl.replace(/\/\//g, '/');
 
     // Ensure the URL starts with "https://"
     if (!targetUrl.startsWith("http")) {
