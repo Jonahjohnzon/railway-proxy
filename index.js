@@ -3,7 +3,11 @@ const request = require("request");
 const cors = require("cors");
 
 const app = express();
-app.use(cors()); // Allows all origins
+app.use(cors({
+    origin: 'https://your-allowed-origin.com', // Replace with the allowed origin
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.get("/proxy", (req, res) => {
     let targetUrl = req.query.url;
@@ -21,8 +25,10 @@ app.get("/proxy", (req, res) => {
     request({
         url: targetUrl,
         headers: {
-            "Referer": "https://wlext.is/",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          "Referer": "https://wlext.is/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/javascript, text/javascript, */*; q=0.01",
+        "X-Requested-With": "XMLHttpRequest"
         },
         encoding: null, // Handle binary content (images, videos)
     }, (error, response, body) => {
@@ -36,10 +42,6 @@ app.get("/proxy", (req, res) => {
         // Check if it's HTML content
         if (response.headers["content-type"].includes("html")) {
             body = body.toString();
-
-            // Remove or modify the DevTools detection logic in the page's JS
-            body = body.replace(/window\.devtools.*?=\s*true;/g, "");
-            body = body.replace(/if\(window\.top !== window\)/g, "if(true)");
 
             // Modify HTML to fix relative URLs for assets like CSS, JS, and images
             body = body.replace(/(href="\/assets|src="\/assets)/g, (match) => {
