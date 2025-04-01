@@ -48,10 +48,10 @@ app.get("/proxy", (req, res) => {
 
             // Fix base URL paths for all resources
             body = body.replace(/(href="\/)/g, (match) => {
-                return match.replace('/', 'https://player.romantica.top/');
+                return match.replace('/', 'https://player.romantica.top');
             });
             body = body.replace(/(src="\/)/g, (match) => {
-                return match.replace('/', 'https://player.romantica.top/');
+                return match.replace('/', 'https://player.romantica.top');
             });
 
             res.setHeader("Content-Type", "text/html; charset=utf-8");
