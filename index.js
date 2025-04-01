@@ -11,12 +11,12 @@ app.get("/proxy", (req, res) => {
     if (!targetUrl) {
         return res.status(400).send("Missing URL parameter");
     }
-
+    console.log(targetUrl)
     // Fix double slashes in the URL
     if (targetUrl.includes('//')) {
         targetUrl = targetUrl.replace(/\/\//g, '/'); // Replace all double slashes with a single slash
     }
-
+    console.log(targetUrl)
     // Ensure the URL starts with "https://"
     if (!targetUrl.startsWith("http")) {
         targetUrl = "https://player.romantica.top" + targetUrl;
