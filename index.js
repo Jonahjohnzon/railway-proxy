@@ -1,43 +1,59 @@
 const express = require("express");
 const request = require("request");
 const cors = require("cors");
+const url = require("url");
 
 const app = express();
 app.use(cors()); // Allows all origins
 
-// Forwards all requests through proxy
 app.get("/proxy", (req, res) => {
-    let url = req.query.url;
+    let targetUrl = req.query.url;
 
-    if (!url) {
+    if (!targetUrl) {
         return res.status(400).send("Missing URL parameter");
     }
 
-    // Ensure the URL is fully qualified (handling relative URLs)
-    if (!url.startsWith("http")) {
-        url = "https://player.romantica.top" + url;
+    // Handle relative paths
+    if (!targetUrl.startsWith("http")) {
+        targetUrl = "https://player.romantica.top" + targetUrl;
     }
 
-    // Request the resource (video, JS, CSS, etc.)
-    request({
-        url: url,
-        headers: {
-            "Referer": "https://wlext.is/",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    // Check the file extension for JS, CSS, or media (to handle MIME types correctly)
+    const parsedUrl = new URL(targetUrl);
+    const fileExtension = parsedUrl.pathname.split('.').pop();
+
+    request(
+        {
+            url: targetUrl,
+            headers: {
+                "Referer": "https://wlext.is/",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            encoding: null // Ensures binary data is handled correctly (important for images & videos)
         },
-        encoding: null // Ensure correct handling of binary content (like images, videos, etc.)
-    }, (error, response, body) => {
-        if (error) {
-            return res.status(500).send("Error fetching the requested URL");
+        (error, response, body) => {
+            if (error) {
+                return res.status(500).send("Error fetching the requested URL");
+            }
+
+            // Fix MIME type based on file extension
+            if (fileExtension === "js") {
+                res.set("Content-Type", "application/javascript");
+            } else if (fileExtension === "css") {
+                res.set("Content-Type", "text/css");
+            } else if (fileExtension === "jpg" || fileExtension === "jpeg" || fileExtension === "png" || fileExtension === "gif" || fileExtension === "webp") {
+                res.set("Content-Type", "image/" + fileExtension);
+            } else if (fileExtension === "mp4" || fileExtension === "webm" || fileExtension === "avi") {
+                res.set("Content-Type", "video/" + fileExtension);
+            } else if (fileExtension === "mkv") {
+                res.set("Content-Type", "video/x-matroska");
+            }
+
+            // Forward the response body and headers
+            res.set(response.headers);
+            res.status(response.statusCode).send(body);
         }
-
-        // Forward headers, ensuring MIME types are correctly passed
-        res.set(response.headers);
-        res.status(response.statusCode).send(body);
-    });
+    );
 });
-
-// To serve other resources like images or scripts directly from the proxy server
-app.use(express.static("assets"));
 
 app.listen(3000, () => console.log("Proxy running on port 3000"));
